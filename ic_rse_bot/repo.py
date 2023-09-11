@@ -10,9 +10,9 @@ github = GitHub(UnauthAuthStrategy())
 
 
 class Repository:
-    def __init__(self, repo: FullRepository) -> None:
+    def __init__(self, repo: FullRepository, files: set[str]) -> None:
         self._repo = repo
-        self._files: set[str]
+        self.files = files
 
     def __getattribute__(self, name: str) -> Any:
         try:
@@ -20,25 +20,17 @@ class Repository:
         except AttributeError:
             return getattr(self._repo, name)
 
-    @property
-    async def files(self) -> set[str]:
-        if hasattr(self, "_files"):
-            return self._files
-
-        # TODO: Don't hardcode tree_sha arg
-        resp = await github.rest.git.async_get_tree(
-            self._repo.owner.login,
-            self._repo.name,
-            tree_sha="HEAD",
-            recursive=True,
-        )
-        self._files = {item.path for item in resp.parsed_data.tree}
-        return self._files
-
     async def from_name(name: str) -> Repository:
         owner, repo = name.split("/")
-        resp = await github.rest.repos.async_get(owner, repo)
-        return Repository(resp.parsed_data)
+        repo_resp = await github.rest.repos.async_get(owner, repo)
+
+        # TODO: Don't hardcode tree_sha arg
+        tree_resp = await github.rest.git.async_get_tree(
+            owner, repo, tree_sha="HEAD", recursive=True
+        )
+        files = {item.path for item in tree_resp.parsed_data.tree}
+
+        return Repository(repo_resp.parsed_data, files)
 
 
 # async def get_latest_commit(repo: str):

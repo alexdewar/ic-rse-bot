@@ -17,7 +17,7 @@ async def _check_precommit(repo: Repository) -> bool:
     #     print(resp.content)
     #     config = yaml.safe_load(resp.content)
     #     print(config)
-    ret = ".pre-commit-config.yaml" not in await repo.files
+    ret = ".pre-commit-config.yaml" not in repo.files
     if ret:
         print(f"{repo.name} not using pre-commit")
     else:
