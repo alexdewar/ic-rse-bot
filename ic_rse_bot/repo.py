@@ -20,6 +20,7 @@ class Repository:
         except AttributeError:
             return getattr(self._repo, name)
 
+    @staticmethod
     async def from_name(name: str) -> Repository:
         owner, repo = name.split("/")
         repo_resp = await github.rest.repos.async_get(owner, repo)
