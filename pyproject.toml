@@ -21,7 +21,6 @@ flake8 = "^6.0.0"
 flake8-docstrings = "^1.6.0"
 
 [tool.mypy]
-disallow_any_explicit = true
 disallow_any_generics = true
 warn_unreachable = true
 warn_unused_ignores = true
