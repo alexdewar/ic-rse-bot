@@ -1,12 +1,23 @@
 # import yaml
 
 import asyncio
+import re
 
 from .repo import Repository
 
 
-def raw_url(repo: str, path: str) -> str:
-    return f"https://raw.githubusercontent.com/{repo}/HEAD/{path}"
+async def _check_has_readme(repo: Repository) -> bool:
+    for file in repo.files:
+        if match := re.search("^(copying|readme)(|.md|.txt)$", file, re.IGNORECASE):
+            print(f"{repo.name} has a readme ({match.string})")
+            return False
+
+    print(f"{repo.name} doesn't have a readme")
+    return True
+
+
+# def raw_url(repo: str, path: str) -> str:
+#     return f"https://raw.githubusercontent.com/{repo}/HEAD/{path}"
 
 
 async def _check_precommit(repo: Repository) -> bool:
@@ -26,7 +37,10 @@ async def _check_precommit(repo: Repository) -> bool:
     return ret
 
 
-_checks = (_check_precommit,)
+_checks = (
+    _check_has_readme,
+    _check_precommit,
+)
 
 
 async def run_checks(repo_name: str) -> None:
