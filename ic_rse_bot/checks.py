@@ -1,32 +1,35 @@
 # import yaml
 
-from .repo import get_tree
+import asyncio
+
+from .repo import Repository
 
 
 def raw_url(repo: str, path: str) -> str:
     return f"https://raw.githubusercontent.com/{repo}/HEAD/{path}"
 
 
-async def check_precommit(repo: str) -> bool:
-    tree = await get_tree(repo, "HEAD")
-    for item in tree.tree:
-        if item.path == ".pre-commit-config.yaml":
-            # async with github.get_async_client() as client:
-            #     resp = await client.get(raw_url(repo, item.path))
-            #     resp.raise_for_status()
+async def _check_precommit(repo: Repository) -> None:
+    # async with github.get_async_client() as client:
+    #     resp = await client.get(raw_url(repo, item.path))
+    #     resp.raise_for_status()
 
-            #     print(resp.content)
-            #     config = yaml.safe_load(resp.content)
-            #     print(config)
-
-            return True
-
-    return False
-
-
-async def run_checks(repo: str) -> None:
-    has_precommit = await check_precommit(repo)
-    if has_precommit:
-        print(f"{repo} using pre-commit")
+    #     print(resp.content)
+    #     config = yaml.safe_load(resp.content)
+    #     print(config)
+    if ".pre-commit-config.yaml" in await repo.files:
+        print(f"{repo.name} using pre-commit")
     else:
-        print(f"{repo} not using pre-commit")
+        print(f"{repo.name} not using pre-commit")
+
+
+_checks = (_check_precommit,)
+
+
+async def run_checks(repo_name: str) -> None:
+    repo = await Repository.from_name(repo_name)
+    if repo.language != "Python":
+        raise RuntimeError("Python is currently the only supported language")
+
+    futures = (check(repo) for check in _checks)
+    await asyncio.gather(*futures)
