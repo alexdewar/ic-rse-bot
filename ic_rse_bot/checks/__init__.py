@@ -1,8 +1,9 @@
 import asyncio
 import importlib
+import inspect
 import pkgutil
 import sys
-from collections.abc import Awaitable, Callable
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -13,34 +14,58 @@ from ic_rse_bot.repo import Repository
 
 
 @dataclass
-class Check:
-    name: str
-    run: Callable[[Repository], Awaitable[str | None]]
-
-
-@dataclass
 class Suggestion:
-    name: str
+    heading: str
     content: str
 
 
-def _get_checks() -> list[Check]:
-    checks: list[Check] = []
+class BaseCheck(ABC):
+    def __init__(self, name: str, heading: str) -> None:
+        self.name = name
+        self.heading = heading
+
+    @abstractmethod
+    async def run(self, repo: Repository) -> str | None:
+        pass
+
+
+def _is_check_class(var: Any) -> bool:
+    # If it's not a class at all, then it's not a check class
+    if not inspect.isclass(var):
+        return False
+
+    # If var is actually BaseCheck itself, then it's not a check class
+    if var is BaseCheck:
+        return False
+
+    # Finally check that var inherits from BaseCheck
+    return issubclass(var, BaseCheck)
+
+
+def _get_checks() -> list[BaseCheck]:
+    checks: list[BaseCheck] = []
+
+    # Iterate over submodules of ic_rse_bot.checks
     for info in pkgutil.iter_modules(sys.modules[__name__].__path__):
+        # Import the submodule (TODO: Error handling)
         module = importlib.import_module(f"{__name__}.{info.name}")
-        checks.append(Check(info.name, module.run_check))
+
+        # Find any classes which inherit from BaseCheck
+        for _, cls in inspect.getmembers(module, _is_check_class):
+            # Create an instance of class
+            checks.append(cls())
+
     return checks
 
 
 async def _run_checks(repo: Repository) -> list[Suggestion]:
     checks = _get_checks()
-    check_names = [check.name for check in checks]
-    print(f"Running the following checks: {', '.join(check_names)}")
+    print(f"Running the following checks: {', '.join(check.name for check in checks)}")
 
     futures = (check.run(repo) for check in checks)
     results = await asyncio.gather(*futures)
     suggestions: list[Suggestion] = [
-        Suggestion(name, msg) for name, msg in zip(check_names, results) if msg
+        Suggestion(check.heading, msg) for check, msg in zip(checks, results) if msg
     ]
     return suggestions
 

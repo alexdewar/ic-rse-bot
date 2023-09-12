@@ -2,7 +2,7 @@
 {% if not suggestions %}
 We have no suggestions. Well done 😀.
 {% else %}{% for suggestion in suggestions %}
-## {{ suggestion.name }}
+## {{ suggestion.heading }}
 
 {{ suggestion.content }}
 {% endfor %}{% endif %}
