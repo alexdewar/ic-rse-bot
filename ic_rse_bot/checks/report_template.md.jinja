@@ -1,0 +1,8 @@
+# Report for {{ repo_name }}
+{% if not suggestions %}
+We have no suggestions. Well done 😀.
+{% else %}{% for suggestion in suggestions %}
+## {{ suggestion.name }}
+
+{{ suggestion.content }}
+{% endfor %}{% endif %}
