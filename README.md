@@ -1,45 +1,23 @@
-# Poetry Template
+# RSE bot
 
 [![Test and build](https://github.com/ImperialCollegeLondon/poetry_template_2/actions/workflows/ci.yml/badge.svg)](https://github.com/ImperialCollegeLondon/poetry_template_2/actions/workflows/ci.yml)
 
-This is a minimal Python 3.11 application that uses [poetry](https://python-poetry.org) for packaging and dependency management. It also provides [pre-commit](https://pre-commit.com/) hooks (for [isort](https://pycqa.github.io/isort/), [Black](https://black.readthedocs.io/en/stable/), [Flake8](https://flake8.pycqa.org/en/latest/) and [mypy](https://mypy.readthedocs.io/en/stable/)) and automated tests using [pytest](https://pytest.org/) and [GitHub Actions](https://github.com/features/actions). Pre-commit hooks are automatically kept updated with a dedicated GitHub Action, this can be removed and replace with [pre-commit.ci](https://pre-commit.ci) if using an public repo. It was developed by the [Imperial College Research Computing Service](https://www.imperial.ac.uk/admin-services/ict/self-service/research-support/rcs/).
+A tool to analyse whether your code follows best practices.
 
-To use this repository as a template for your own application:
+:construction: This code is currently in pre-alpha stage. :construction:
 
-1. [Download and install Poetry](https://python-poetry.org/docs/#installation) following the instructions for your OS.
-2. Click the green "Use this template" button above
-3. Name and create your repository
-4. Clone your new repository and make it your working directory
-5. Replace instances of `myproject` with your own application name. Edit:
-   - `pyproject.toml`
-   - `tests/test_myproject.py`
-   - Rename `myproject` directory
-6. Set up the virtual environment:
+Currently it only works with public repositories on GitHub.
 
-   ```bash
-   poetry install
-   ```
+To run, first install dependencies via poetry:
 
-7. Activate the virtual environment (alternatively, ensure any python-related command is preceded by `poetry run`):
+```sh
+poetry install
+```
 
-   ```bash
-   poetry shell
-   ```
+Run it for a given repository like so:
 
-8. Install the git hooks:
+```sh
+python -m ic_rse_bot ImperialCollegeLondon/FINESSE
+```
 
-   ```bash
-   pre-commit install
-   ```
-
-9. Run the main app:
-
-   ```bash
-   python -m myproject
-   ```
-
-10. Run the tests:
-
-   ```bash
-   pytest
-   ```
+The tool will then generate a report highlighting issues with the given repository.
