@@ -6,7 +6,7 @@ authors = ["Alex Dewar <a.dewar@imperial.ac.uk>"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-githubkit = "^0.10.6"
+githubkit = "^0.10.7"
 asyncio = "^3.4.3"
 jinja2 = "^3.1.2"
 pyyaml = "^6.0.1"
