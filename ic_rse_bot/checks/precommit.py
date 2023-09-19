@@ -1,23 +1,21 @@
-from collections.abc import Sequence
-
 import yaml
 
 from ic_rse_bot.checks import BaseCheck
 from ic_rse_bot.repo import Repository, github
 
-_Hooks = dict[str, Sequence[str]]
+_Hooks = dict[str, set[str]]
 _RECOMMENDED_HOOKS: _Hooks = {
-    "https://github.com/pre-commit/pre-commit-hooks": (
+    "https://github.com/pre-commit/pre-commit-hooks": {
         "check-merge-conflict",
         "debug-statements",
-    ),
-    "https://github.com/asottile/pyupgrade": ("pyupgrade",),
-    "https://github.com/PyCQA/autoflake": ("autoflake",),
-    "https://github.com/pycqa/isort": ("isort",),
-    "https://github.com/psf/black": ("black",),
-    "https://github.com/PyCQA/flake8": ("flake8",),
-    "https://github.com/pre-commit/mirrors-mypy": ("mypy",),
-    "https://github.com/igorshubovych/markdownlint-cli": ("markdownlint",),
+    },
+    "https://github.com/asottile/pyupgrade": {"pyupgrade"},
+    "https://github.com/PyCQA/autoflake": {"autoflake"},
+    "https://github.com/pycqa/isort": {"isort"},
+    "https://github.com/psf/black": {"black"},
+    "https://github.com/PyCQA/flake8": {"flake8"},
+    "https://github.com/pre-commit/mirrors-mypy": {"mypy"},
+    "https://github.com/igorshubovych/markdownlint-cli": {"markdownlint"},
 }
 
 _NO_PRECOMMIT_MSG = (
@@ -45,8 +43,8 @@ async def _get_precommit_hooks(repo: Repository) -> _Hooks:
 
     config = yaml.safe_load(resp.content)
     hooks: _Hooks = {}
-    for hook in config["repos"]:
-        hooks[hook["repo"]] = [hook["id"] for hook in hook["hooks"]]
+    for hook_repo in config["repos"]:
+        hooks[hook_repo["repo"]] = {hook["id"] for hook in hook_repo["hooks"]}
     return hooks
 
 
@@ -54,11 +52,12 @@ async def _get_suggested_hooks(repo: Repository) -> _Hooks:
     current_hooks = await _get_precommit_hooks(repo)
     suggested_hooks: _Hooks = {}
     for url, ids in _RECOMMENDED_HOOKS.items():
+        # If the user already has some of the hooks installed, ignore these ones
         if url in current_hooks:
-            if missing_ids := [id for id in ids if id not in current_hooks[url]]:
-                suggested_hooks[url] = missing_ids
-        else:
-            suggested_hooks[url] = list(ids)
+            ids = ids.difference(current_hooks[url])
+
+        if ids:
+            suggested_hooks[url] = ids
     return suggested_hooks
 
 
@@ -79,6 +78,6 @@ class CheckPreCommit(BaseCheck):
 
             msg += "Suggested hooks (IDs in brackets):\n\n"
             for url, ids in suggested_hooks.items():
-                msg += f"* {url} ({', '.join(ids)})\n"
+                msg += f"* {url} ({', '.join(sorted(ids))})\n"
 
         return msg if msg else None
