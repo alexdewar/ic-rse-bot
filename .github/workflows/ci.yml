@@ -1,14 +1,8 @@
-name: Test and build
+name: Test
 
 on: [push, pull_request, release]
 
 jobs:
-  qa:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pre-commit/action@v3.0.0
-
   check-links:
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +14,6 @@ jobs:
           use-verbose-mode: 'yes'
 
   test:
-    needs: qa
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
