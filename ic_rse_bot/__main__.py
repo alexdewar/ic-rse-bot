@@ -1,4 +1,5 @@
 """The entry point for the bot program."""
+
 import asyncio
 import sys
 from pathlib import Path
